@@ -136,61 +136,64 @@ INSERT INTO entry_details VALUES
 (1005,115,800,15.5);
 
 # TAO VIEW CHI TIET PHIEU NHAP
-CREATE VIEW view_import_coupon AS SELECT import_coupon.number_votes_entered, s.material_code, number_of_import, import_unit_price,sum(number_of_import * import_unit_price) FROM import_coupon
-        INNER JOIN entry_details ed on import_coupon.number_votes_entered = ed.number_votes_entered
-        INNER JOIN supplies s on ed.material_code = s.material_code;
+CREATE VIEW vw_CTPNHAP AS SELECT number_votes_entered,material_code , number_of_import, import_unit_price,sum(number_of_import * import_unit_price)'Thanh Tien' FROM entry_details;
 
-SELECT * FROM view_import_coupon;
 
 # TAO VIEW CHI TIET PHIEU VAT TU
-CREATE VIEW view_import_coupon_supplies AS SELECT ic.number_votes_entered, s.material_code,name_supplies,number_of_import, import_unit_price,sum(number_of_import * import_unit_price)'Thanh tien' FROM entry_details
-        INNER JOIN import_coupon ic on entry_details.number_votes_entered = ic.number_votes_entered
-        INNER JOIN supplies s on entry_details.material_code = s.material_code;
+CREATE VIEW vw_CTPNHAP_VT AS SELECT number_votes_entered, entry_details.material_code,name_supplies,number_of_import, import_unit_price,sum(number_of_import * import_unit_price)'Thanh_tien_nhap' FROM entry_details
+        JOIN supplies s on entry_details.material_code = s.material_code;
 
 # TAO VIEW CHI TIET PHIEU NHAP VAT TU , PHIEU NHAP
-CREATE VIEW view_entry_details_import_coupon_supplies AS SELECT ic.number_votes_entered,date_added,order_number,s.material_code,name_supplies,number_of_import,import_unit_price, sum(number_of_import * import_unit_price)'Thanh tien' FROM entry_details
-        INNER JOIN import_coupon ic on entry_details.number_votes_entered = ic.number_votes_entered
-        INNER JOIN supplies s on entry_details.material_code = s.material_code;
+CREATE VIEW vw_CTPNHAP_VT_PN AS SELECT entry_details.number_votes_entered,date_added,order_number,entry_details.material_code,name_supplies,number_of_import,import_unit_price, sum(number_of_import * import_unit_price)'Thanh_tien_nhap' FROM entry_details
+        JOIN import_coupon ic on entry_details.number_votes_entered = ic.number_votes_entered
+        JOIN supplies s on entry_details.material_code = s.material_code;
 
 # TAO VIEW CHI TIET PHIEU NHAP VAT TU , PHIEU NHAP, DON HANG
-CREATE VIEW view_entry_details_import_coupon_supplies_order AS SELECT ic.number_votes_entered, date_added,o.order_number,supplier_code,s.material_code,name_supplies, number_of_import,import_unit_price,sum(number_of_import * import_unit_price)'Thanh tien' FROM entry_details
-        INNER JOIN supplies s on entry_details.material_code = s.material_code
-        INNER JOIN import_coupon ic on entry_details.number_votes_entered = ic.number_votes_entered
-        INNER JOIN orders o on ic.order_number = o.order_number;
+CREATE VIEW vw_CTPNHAP_VT_PN_DH AS SELECT entry_details.number_votes_entered, date_added,o.order_number,supplier_code,entry_details.material_code,name_supplies, number_of_import,import_unit_price,sum(number_of_import * import_unit_price)'Thanh tien' FROM entry_details
+        JOIN supplies s on entry_details.material_code = s.material_code
+        JOIN import_coupon ic on entry_details.number_votes_entered = ic.number_votes_entered
+        JOIN orders o on ic.order_number = o.order_number;
+
+#TAO VIEW CHI TIET PHIEU NHAP VOI SO LUONG NHAP >5
+CREATE VIEW vw_CTPNHAP_loc AS SELECT number_votes_entered,material_code,number_of_import,import_unit_price, sum(number_of_import*import_unit_price)'Thanh_tien_nhap' FROM entry_details
+      WHERE number_of_import > 5;
+
+#TAO VIEW CHI TIET PHIEU NHAP VAT TU VOI DON VI TINH LA BO
+CREATE VIEW vw_CTPNHAP_VT_loc AS SELECT number_votes_entered,entry_details.material_code,name_supplies,number_of_import,import_unit_price, sum(number_of_import*import_unit_price)'Thanh_tien_nhap' FROM entry_details
+      JOIN supplies s on entry_details.material_code = s.material_code WHERE unit ='Bo';
 
 # TAO VIEW CHI TIET PHIEU XUAT
-CREATE VIEW view_bill AS SELECT number_of_votes_cast,material_code,number_of_exports, export_unit_price, sum(number_of_exports * export_unit_price)'Thanh tien' FROM export_details;
+CREATE VIEW vw_CTPXUAT AS SELECT number_of_votes_cast,material_code,number_of_exports, export_unit_price, sum(number_of_exports * export_unit_price)'Thanh_tien_xuat' FROM export_details;
 
 # TAO VIEW CHI TIET PHIEU XUAT VAT TU
-CREATE VIEW view_bill_supplies AS SELECT number_of_votes_cast, export_details.material_code,name_supplies,number_of_exports,export_unit_price FROM export_details
-       INNER JOIN supplies s on export_details.material_code = s.material_code;
+CREATE VIEW vw_CTPXUAT_VT AS SELECT number_of_votes_cast, export_details.material_code,name_supplies,number_of_exports,export_unit_price FROM export_details
+       JOIN supplies s on export_details.material_code = s.material_code;
 
 #TAO VIEW CHI TIET PHIEU XUAT VAT TU, PHIEU XUAT
-CREATE VIEW view_bill_supplies_export_details AS SELECT b.number_of_votes_cast,customer_name,s.material_code,name_supplies,number_of_exports,export_unit_price FROM export_details
-        INNER JOIN supplies s on export_details.material_code = s.material_code
-        INNER JOIN bill b on export_details.number_of_votes_cast = b.number_of_votes_cast;
+CREATE VIEW vw_CTPXUAT_VT_PX AS SELECT export_details.number_of_votes_cast,customer_name,export_details.material_code,name_supplies,number_of_exports,export_unit_price FROM export_details
+        JOIN supplies s on export_details.material_code = s.material_code
+        JOIN bill b on export_details.number_of_votes_cast = b.number_of_votes_cast;
 
-#TAO PROCEDURE
-CREATE PROCEDURE get_last_quantity(IN cusNum INT(100))
+#TAO PROCEDURE TONG SO LUONG CUOI VAT TU VOI MA VAT TU
+CREATE PROCEDURE get_last_quantity(IN ma_vat_tu INT(100))
 BEGIN
-    SELECT last_quantity FROM inventory WHERE material_code = cusNum;
+    SELECT last_quantity FROM inventory WHERE material_code = ma_vat_tu;
 end;
 CALL get_last_quantity(111);
 
 # TONG TIEN XUAT THEO MA VAT TU
-CREATE PROCEDURE get_total_payments(IN total INT(100))
+CREATE PROCEDURE get_total_payments(IN ma_vat_tu INT(100))
 BEGIN
     SELECT number_of_exports, export_unit_price, sum(number_of_exports * export_unit_price)'Tong tien'FROM export_details
-            INNER JOIN supplies s on export_details.material_code = s.material_code
-    WHERE export_details.material_code = total GROUP BY s.material_code;
+            WHERE material_code = ma_vat_tu GROUP BY material_code;
 end;
 CALL get_total_payments(112);
 
 #TONG SO LUONG DAT THEO SO DON HANG
-CREATE PROCEDURE get_total_order_quantity(IN total_order INT(100))
+CREATE PROCEDURE get_total_order_quantity(IN so_don_hang INT(100))
 BEGIN
-    SELECT order_details.order_number,order_quantity, count(order_quantity)'Tong luong don dat hang' FROM order_details
-        JOIN orders o on order_details.order_number = o.order_number  WHERE material_code = total_order GROUP BY o.order_number;
+    SELECT order_details.order_number,order_quantity, sum(order_quantity)'Tong luong don dat hang' FROM order_details
+      WHERE material_code = so_don_hang GROUP BY material_code;
 end;
 CALL get_total_order_quantity(111);
 
